@@ -1,0 +1,6 @@
+# Local config file containing Telegram bot token & Sheet URL
+config.js
+
+# OS files
+.DS_Store
+Thumbs.db

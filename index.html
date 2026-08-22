@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homestay Menu - Coconut Homestay</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Custom Tailwind Config for Fonts -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Cấu hình credentials bảo mật -->
+  <script src="config.js"></script>
+  <script>
+    // Khởi tạo CONFIG mặc định nếu config.js không được tải hoặc bị bỏ qua
+    if (typeof window.CONFIG === 'undefined') {
+      window.CONFIG = {
+        SHEETS_API_URL: "",
+        TELEGRAM_BOT_TOKEN: "",
+        TELEGRAM_CHAT_ID: ""
+      };
+    }
+  </script>
+  <style>
+    /* Ẩn thanh cuộn cho thanh danh mục */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-gray-800 pb-28 font-sans">
+
+  <!-- Cảnh báo cấu hình cục bộ nếu thiếu file config.js -->
+  <div id="config-warning" class="hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-3 text-center text-xs font-semibold shadow-md flex items-center justify-center gap-2 sticky top-0 z-30">
+    <i class="fa-solid fa-triangle-exclamation text-sm animate-pulse"></i>
+    <span>Configuration missing. Please create <code>config.js</code> from <code>config.example.js</code>.</span>
+  </div>
+
+  <!-- 1. HEADER (Vibe Chill Bến Tre) -->
+  <header class="bg-gradient-to-br from-emerald-800 to-teal-900 text-white pt-8 pb-10 px-6 rounded-b-[2rem] shadow-xl text-center relative overflow-hidden">
+    <!-- Phân tử thiết kế nền mờ -->
+    <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-700/20 rounded-full blur-xl"></div>
+    <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-700/20 rounded-full blur-xl"></div>
+    
+    <h1 class="text-3xl font-extrabold tracking-wide font-outfit uppercase">COCONUT HOMESTAY</h1>
+    <p class="text-xs text-emerald-200 mt-1.5 italic font-medium tracking-wider">Chill vibes & Local fresh food</p>
+  </header>
+
+  <!-- 2. CATEGORY FILTER (Thanh cuộn ngang) -->
+  <div class="sticky top-0 bg-white/95 backdrop-blur-md z-10 py-3 px-4 shadow-sm border-b border-gray-100">
+    <div id="category-list" class="flex gap-2 overflow-x-auto no-scrollbar max-w-md mx-auto">
+      <button onclick="filterCategory('All')" class="cat-btn active bg-emerald-700 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200 shadow-sm">All</button>
+      <!-- Các nút danh mục khác sẽ tự động render tại đây -->
+    </div>
+  </div>
+
+  <!-- 3. MENU LIST -->
+  <main class="p-4 max-w-md mx-auto space-y-4" id="menu-container">
+    <div class="text-center py-12 text-gray-500" id="loading">
+      <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-600 mb-3"></i>
+      <p class="text-sm font-medium">Loading menu...</p>
+    </div>
+  </main>
+
+  <!-- 4. STICKY BOTTOM BAR (Thanh tổng tiền & Confirm) -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-100 p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] z-20">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-4">
+      <div>
+        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total Amount</p>
+        <p class="text-xl font-black text-emerald-800 font-outfit" id="total-price">0 VNĐ</p>
+      </div>
+      <button onclick="openRoomModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-emerald-700/20 active:scale-95 transition-all duration-200">
+        <span>Confirm Order</span>
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 5. MODAL NHẬP SỐ PHÒNG -->
+  <div id="room-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-gray-100 transform scale-100 transition-transform duration-300">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700">
+          <i class="fa-solid fa-concierge-bell text-lg"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-extrabold text-gray-800 font-outfit">Confirm Your Order</h3>
+          <p class="text-[10px] text-gray-400 font-medium">FINAL STEP</p>
+        </div>
+      </div>
+      
+      <p class="text-xs text-gray-500 mb-4 leading-relaxed">Please enter your Room Number or Name so we can serve you.</p>
+      
+      <input type="text" id="room-input" placeholder="e.g. Room 102 or Alex" class="w-full border border-gray-200 focus:border-emerald-600 rounded-xl p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/10 mb-5 transition duration-200">
+      
+      <div class="flex gap-3">
+        <button onclick="closeRoomModal()" class="w-1/2 py-3 border border-gray-200 hover:bg-gray-50 rounded-xl text-sm font-semibold text-gray-500 transition duration-200 active:scale-95">Cancel</button>
+        <button id="submit-order-btn" onclick="submitOrder()" class="w-1/2 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-700/10 transition duration-200 active:scale-95">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT XỬ LÝ LOGIC -->
+  <script>
+    // Khởi tạo cấu hình từ biến global CONFIG
+    const CONFIG = window.CONFIG;
+    const SHEETS_API_URL = CONFIG.SHEETS_API_URL;
+    const TELEGRAM_BOT_TOKEN = CONFIG.TELEGRAM_BOT_TOKEN;
+    const TELEGRAM_CHAT_ID = CONFIG.TELEGRAM_CHAT_ID;
+
+    // Hiển thị cảnh báo nếu thiếu cấu hình
+    if (!SHEETS_API_URL || !TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || 
+        SHEETS_API_URL.includes("YOUR_") || TELEGRAM_BOT_TOKEN.includes("YOUR_")) {
+      document.getElementById('config-warning').classList.remove('hidden');
+    }
+
+    let menuData = [];
+    let cart = {};
+    let currentCategory = 'All';
+
+    // Định dạng giá tiền VNĐ an toàn
+    function formatPrice(price) {
+      const num = Number(price);
+      if (isNaN(num)) return 'Contact Host';
+      return num.toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    // 1. Tải dữ liệu từ Google Sheets
+    async function fetchMenu() {
+      const loadingDiv = document.getElementById('loading');
+      if (!SHEETS_API_URL || SHEETS_API_URL.includes("YOUR_")) {
+        loadingDiv.innerHTML = `
+          <div class="text-amber-600 p-6 border border-amber-200 rounded-2xl bg-amber-50 text-center max-w-sm mx-auto">
+            <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 animate-bounce"></i>
+            <p class="font-bold">Google Sheets URL not configured</p>
+            <p class="text-xs mt-2 text-amber-700">Please fill SHEETS_API_URL in <code>config.js</code> to load the menu.</p>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const response = await fetch(SHEETS_API_URL);
+        if (!response.ok) {
+          throw new Error("Failed to connect to Google Sheets server");
+        }
+        menuData = await response.json();
+        
+        if (!Array.isArray(menuData)) {
+          throw new Error("Invalid data format received");
+        }
+
+        renderCategories();
+        renderMenu('All');
+      } catch (error) {
+        console.error("Lỗi tải menu:", error);
+        loadingDiv.innerHTML = `
+          <div class="text-red-500 p-6 border border-red-200 rounded-2xl bg-red-50 text-center max-w-sm mx-auto">
+            <i class="fa-solid fa-circle-xmark text-3xl mb-2"></i>
+            <p class="font-semibold">Failed to load menu</p>
+            <p class="text-xs text-gray-500 mt-2">${error.message || "Please check config or network connection."}</p>
+            <button onclick="fetchMenu()" class="mt-4 px-5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:bg-emerald-800 transition active:scale-95">
+              Try again
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // 2. Render Nút Danh Mục
+    function renderCategories() {
+      const categories = ['All', ...new Set(menuData.map(item => item.category).filter(Boolean))];
+      const container = document.getElementById('category-list');
+      container.innerHTML = categories.map(cat => `
+        <button 
+          onclick="filterCategory('${cat}')" 
+          data-category="${cat}"
+          class="cat-btn ${cat === currentCategory ? 'bg-emerald-700 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200">
+          ${cat}
+        </button>
+      `).join('');
+    }
+
+    // 3. Lọc danh mục
+    function filterCategory(category) {
+      currentCategory = category;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        const btnCat = btn.getAttribute('data-category');
+        if(btnCat === category) {
+          btn.className = "cat-btn bg-emerald-700 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200 shadow-sm";
+        } else {
+          btn.className = "cat-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200";
+        }
+      });
+      renderMenu(category);
+    }
+
+    // 4. Render Danh Sách Món Ăn
+    function renderMenu(category) {
+      const container = document.getElementById('menu-container');
+      const filtered = category === 'All' ? menuData : menuData.filter(i => i.category === category);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-400">
+            <i class="fa-solid fa-utensils text-3xl mb-2"></i>
+            <p class="text-sm font-medium">No items found in this category.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const qty = cart[item.id] || 0;
+        // Sử dụng ảnh mặc định chill nếu món ăn không có hình ảnh
+        const itemImage = item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop&q=60';
+        
+        return `
+          <div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md border border-gray-100/80 flex flex-col gap-3 transition-all duration-200">
+            <div class="flex gap-3">
+              <img src="${itemImage}" 
+                   onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop&q=60'"
+                   class="w-20 h-20 rounded-xl object-cover bg-gray-50 flex-shrink-0 shadow-sm border border-gray-100">
+              <div class="flex-1">
+                <h3 class="font-bold text-gray-800 text-base font-outfit">${item.name}</h3>
+                <p class="text-emerald-700 font-bold text-sm mt-1">${formatPrice(item.price)}</p>
+                
+                <!-- NÚT DROPDOWN XỔ CHI TIẾT -->
+                <button onclick="toggleDropdown('${item.id}')" class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold mt-2.5 flex items-center gap-1 focus:outline-none transition">
+                  <span>Ingredients & Allergens</span>
+                  <i id="icon-${item.id}" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                </button>
+              </div>
+
+              <!-- Nút tăng giảm số lượng -->
+              <div class="flex flex-col justify-end items-end gap-1">
+                <div class="flex items-center gap-2 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                  <button onclick="updateQty('${item.id}', -1)" class="w-7 h-7 bg-white hover:bg-gray-100 text-gray-600 font-bold shadow-sm rounded-lg flex items-center justify-center transition active:scale-90">-</button>
+                  <span id="qty-${item.id}" class="text-sm font-extrabold px-1 min-w-[16px] text-center text-gray-700">${qty}</span>
+                  <button onclick="updateQty('${item.id}', 1)" class="w-7 h-7 bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-sm rounded-lg flex items-center justify-center transition active:scale-90">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- NỘI DUNG DROPDOWN (XỔ XUỐNG) -->
+            <div id="dropdown-${item.id}" class="hidden text-xs bg-emerald-50/30 p-3 rounded-xl border border-emerald-100/50 text-gray-600 space-y-1 transition-all duration-300">
+              <p><strong>Ingredients:</strong> ${item.ingredients || 'Fresh local ingredients'}</p>
+              ${item.allergens ? `<p class="text-amber-700"><strong>Allergens:</strong> ${item.allergens}</p>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 5. Toggle Dropdown
+    function toggleDropdown(id) {
+      const content = document.getElementById(`dropdown-${id}`);
+      const icon = document.getElementById(`icon-${id}`);
+      if (content && icon) {
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+      }
+    }
+
+    // 6. Cập nhật giỏ hàng (Tối ưu hóa: chỉ cập nhật phần tử số lượng và tổng tiền trong DOM)
+    function updateQty(id, change) {
+      const item = menuData.find(i => i.id == id);
+      if (!item) return;
+
+      cart[id] = (cart[id] || 0) + change;
+      if (cart[id] <= 0) {
+        delete cart[id];
+      }
+      
+      // Cập nhật text hiển thị số lượng trực tiếp trong DOM
+      const qtySpan = document.getElementById(`qty-${id}`);
+      if (qtySpan) {
+        qtySpan.innerText = cart[id] || 0;
+      }
+      
+      calculateTotal();
+    }
+
+    // 7. Tính tổng tiền
+    function calculateTotal() {
+      let total = 0;
+      for (let id in cart) {
+        let item = menuData.find(i => i.id == id);
+        if (item) {
+          total += Number(item.price) * cart[id];
+        }
+      }
+      document.getElementById('total-price').innerText = formatPrice(total);
+    }
+
+    // 8. Bật/Tắt Modal
+    function openRoomModal() {
+      if (Object.keys(cart).length === 0) {
+        alert("Please select at least 1 item!");
+        return;
+      }
+      const modal = document.getElementById('room-modal');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('room-input').focus();
+    }
+    
+    function closeRoomModal() {
+      const modal = document.getElementById('room-modal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // 9. GỬI ĐƠN HÀNG SANG TELEGRAM BOT
+    async function submitOrder() {
+      const room = document.getElementById('room-input').value.trim();
+      if (!room) {
+        alert("Please enter your Room Number or Name!");
+        return;
+      }
+
+      if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || TELEGRAM_BOT_TOKEN.includes("YOUR_")) {
+        alert("Telegram Bot not configured. Please configure config.js before submitting your order!");
+        return;
+      }
+
+      const submitBtn = document.getElementById('submit-order-btn');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...`;
+
+      let orderText = `🚨 **NEW ORDER RECEIVED!**\n`;
+      orderText += `📍 **Location/Room:** ${room}\n`;
+      orderText += `------------------------------\n`;
+
+      let total = 0;
+      for (let id in cart) {
+        let item = menuData.find(i => i.id == id);
+        if (item) {
+          let subtotal = Number(item.price) * cart[id];
+          total += subtotal;
+          orderText += `• **${item.name}** x${cart[id]} = ${subtotal.toLocaleString('vi-VN')}đ\n`;
+        }
+      }
+
+      orderText += `------------------------------\n`;
+      orderText += `💰 **TOTAL:** ${total.toLocaleString('vi-VN')} VNĐ\n`;
+      orderText += `⏰ **Time:** ${new Date().toLocaleTimeString('vi-VN')} ${new Date().toLocaleDateString('vi-VN')}`;
+
+      try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: orderText,
+            parse_mode: 'Markdown'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Telegram API returned error: " + response.status);
+        }
+
+        alert("Thank you! Your order has been sent to the host.");
+        
+        // Reset cart
+        cart = {};
+        calculateTotal();
+        closeRoomModal();
+
+        // Đặt lại các số lượng hiển thị trong menu hiện tại về 0
+        document.querySelectorAll('[id^="qty-"]').forEach(span => {
+          span.innerText = '0';
+        });
+
+        filterCategory('All');
+      } catch (e) {
+        console.error("Gửi đơn hàng thất bại:", e);
+        alert("Error sending order. Please contact host directly.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
+    }
+
+    // Chạy tải dữ liệu khi trang web load
+    fetchMenu();
+  </script>
+</body>
+</html>
