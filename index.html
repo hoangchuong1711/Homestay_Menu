@@ -333,16 +333,11 @@
       document.body.style.overflow = '';
     }
 
-    // 9. GỬI ĐƠN HÀNG SANG TELEGRAM BOT
+    // 9. GỬI ĐƠN HÀNG SANG TELEGRAM BOT (GỌI QUA PROXY ĐỂ BẢO MẬT)
     async function submitOrder() {
       const room = document.getElementById('room-input').value.trim();
       if (!room) {
         alert("Please enter your Room Number or Name!");
-        return;
-      }
-
-      if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-        alert("Telegram Bot not configured!");
         return;
       }
 
@@ -351,7 +346,7 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...`;
 
-      // Định dạng tin nhắn bằng HTML
+      // Định dạng tin nhắn HTML
       let orderText = `🚨 <b>NEW ORDER RECEIVED!</b>\n`;
       orderText += `📍 <b>Location/Room:</b> ${room}\n`;
       orderText += `------------------------------\n`;
@@ -371,20 +366,16 @@
       orderText += `⏰ <b>Time:</b> ${new Date().toLocaleTimeString('vi-VN')} ${new Date().toLocaleDateString('vi-VN')}`;
 
       try {
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        const response = await fetch(url, {
+        // Gọi tới API trung gian bảo mật của Vercel
+        const response = await fetch('/api/send-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: orderText,
-            parse_mode: 'HTML' // Đổi sang HTML để tránh lỗi định dạng ký tự
-          })
+          body: JSON.stringify({ message: orderText })
         });
 
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.description || "Telegram API Error");
+          throw new Error(errData.error || "Failed to send order");
         }
 
         alert("Thank you! Your order has been sent to the host.");
