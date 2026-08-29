@@ -4,402 +4,443 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homestay Menu - Coconut Homestay</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Custom Tailwind Config for Fonts -->
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
-            outfit: ['Outfit', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            coconut: {
+              green: '#166534',
+              lightgreen: '#dcfce7',
+              yellow: '#fbbf24',
+              bg: '#fcfcfc'
+            }
           }
         }
       }
     }
   </script>
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Cấu hình credentials bảo mật -->
-  <script src="config.js"></script>
-  <script>
-    // Khởi tạo CONFIG mặc định nếu config.js không được tải hoặc bị bỏ qua
-    if (typeof window.CONFIG === 'undefined') {
-      window.CONFIG = {
-        SHEETS_API_URL: "",
-        TELEGRAM_BOT_TOKEN: "",
-        TELEGRAM_CHAT_ID: ""
-      };
-    }
-  </script>
   <style>
-    /* Ẩn thanh cuộn cho thanh danh mục */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-50 text-gray-800 pb-28 font-sans">
+<body class="bg-coconut-bg text-gray-800 pb-32 font-sans selection:bg-coconut-yellow selection:text-white">
 
-  <!-- Cảnh báo cấu hình cục bộ nếu thiếu file config.js -->
-  <div id="config-warning" class="hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-3 text-center text-xs font-semibold shadow-md flex items-center justify-center gap-2 sticky top-0 z-30">
-    <i class="fa-solid fa-triangle-exclamation text-sm animate-pulse"></i>
-    <span>Configuration missing. Please create <code>config.js</code> from <code>config.example.js</code>.</span>
-  </div>
-
-  <!-- 1. HEADER (Vibe Chill Bến Tre) -->
-  <header class="bg-gradient-to-br from-emerald-800 to-teal-900 text-white pt-8 pb-10 px-6 rounded-b-[2rem] shadow-xl text-center relative overflow-hidden">
-    <!-- Phân tử thiết kế nền mờ -->
-    <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-700/20 rounded-full blur-xl"></div>
-    <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-700/20 rounded-full blur-xl"></div>
-    
-    <h1 class="text-3xl font-extrabold tracking-wide font-outfit uppercase">COCONUT HOMESTAY</h1>
-    <p class="text-xs text-emerald-200 mt-1.5 italic font-medium tracking-wider">Chill vibes & Local fresh food</p>
+  <!-- 1. HEADER (Không ghim để tiết kiệm diện tích khi cuộn) -->
+  <header class="bg-amber-100/90 pt-8 pb-5 px-6 shadow-sm relative z-10">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-coconut-green font-serif">Mai Vàng Homestay</h1>
+        <p class="text-xs text-amber-800 mt-1 font-medium tracking-wider uppercase" id="ui-subtitle">Local Food & Chill Vibes</p>
+      </div>
+      
+      <!-- Nút chuyển ngôn ngữ -->
+      <button onclick="toggleLang()" class="flex items-center gap-2 bg-white text-coconut-green px-3 py-1.5 rounded-full font-bold text-xs shadow-sm border border-amber-200 hover:bg-amber-200 transition">
+        <i class="fa-solid fa-globe"></i>
+        <span id="lang-text">EN</span>
+      </button>
+    </div>
   </header>
 
-  <!-- 2. CATEGORY FILTER (Thanh cuộn ngang) -->
-  <div class="sticky top-0 bg-white/95 backdrop-blur-md z-10 py-3 px-4 shadow-sm border-b border-gray-100">
-    <div id="category-list" class="flex gap-2 overflow-x-auto no-scrollbar max-w-md mx-auto">
-      <button onclick="filterCategory('All')" class="cat-btn active bg-emerald-700 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200 shadow-sm">All</button>
-      <!-- Các nút danh mục khác sẽ tự động render tại đây -->
+  <!-- 2. STICKY NAV BAR: CATEGORY & VIEW MODE -->
+  <div class="bg-amber-50/90 backdrop-blur-md sticky top-0 z-30 border-b border-amber-200/60 shadow-sm py-3 px-4">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+      
+      <!-- Khung kéo ngang Category -->
+      <div id="category-list" class="flex gap-3 overflow-x-auto no-scrollbar flex-1 border-r border-amber-200/60 pr-3">
+        <button onclick="filterCategory('All')" class="cat-btn bg-coconut-green text-white px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-md">All</button>
+      </div>
+
+      <!-- Khung cố định View Mode -->
+      <button onclick="toggleViewMode()" class="shrink-0 text-xs text-coconut-green hover:bg-white flex items-center gap-1.5 transition bg-white/60 px-3 py-2 rounded-xl border border-amber-300/50 shadow-sm font-bold">
+        <i id="view-icon" class="fa-solid fa-list"></i>
+        <span id="ui-view-mode">List View</span>
+      </button>
+
     </div>
   </div>
 
-  <!-- 3. MENU LIST -->
-  <main class="p-4 max-w-md mx-auto space-y-4" id="menu-container">
-    <div class="text-center py-12 text-gray-500" id="loading">
-      <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-600 mb-3"></i>
-      <p class="text-sm font-medium">Loading menu...</p>
+  <!-- MENU LIST -->
+  <main class="p-4 max-w-md mx-auto mt-2" id="menu-container">
+    <div class="text-center py-16 text-gray-400" id="loading">
+      <i class="fa-solid fa-seedling fa-spin text-4xl text-coconut-green mb-4"></i>
+      <p class="text-sm font-medium" id="ui-loading">Discovering local tastes...</p>
     </div>
   </main>
 
-  <!-- 4. STICKY BOTTOM BAR (Thanh tổng tiền & Confirm) -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-100 p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] z-20">
-    <div class="max-w-md mx-auto flex items-center justify-between gap-4">
-      <div>
-        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total Amount</p>
-        <p class="text-xl font-black text-emerald-800 font-outfit" id="total-price">0 VNĐ</p>
-      </div>
-      <button onclick="openRoomModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-emerald-700/20 active:scale-95 transition-all duration-200">
-        <span>Confirm Order</span>
-        <i class="fa-solid fa-arrow-right text-xs"></i>
-      </button>
+  <!-- FLOATING BOTTOM BAR -->
+  <div id="cart-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-coconut-green text-white rounded-2xl p-4 shadow-2xl z-20 flex items-center justify-between gap-4 translate-y-[150%] transition-transform duration-500 ease-out">
+    <div>
+      <p class="text-[10px] text-green-200 uppercase tracking-wider font-bold" id="ui-total-text">Total Amount</p>
+      <p class="text-xl font-bold font-serif text-coconut-yellow" id="total-price">0 đ</p>
     </div>
+    <button onclick="openRoomModal()" class="bg-coconut-yellow hover:bg-yellow-500 text-coconut-green px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg active:scale-95 transition-all">
+      <span id="ui-confirm-btn">View Cart</span>
+      <i class="fa-solid fa-arrow-right text-xs"></i>
+    </button>
   </div>
 
-  <!-- 5. MODAL NHẬP SỐ PHÒNG -->
-  <div id="room-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden flex items-center justify-center p-4 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-gray-100 transform scale-100 transition-transform duration-300">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700">
-          <i class="fa-solid fa-concierge-bell text-lg"></i>
-        </div>
-        <div>
-          <h3 class="text-lg font-extrabold text-gray-800 font-outfit">Confirm Your Order</h3>
-          <p class="text-[10px] text-gray-400 font-medium">FINAL STEP</p>
-        </div>
+  <!-- MODAL NHẬP SỐ PHÒNG -->
+  <div id="room-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl p-7 w-full max-w-sm shadow-2xl">
+      <div class="text-center mb-5">
+        <i class="fa-solid fa-bell-concierge text-3xl text-coconut-yellow mb-2"></i>
+        <h3 class="text-xl font-bold text-coconut-green font-serif" id="ui-modal-title">Ready to order?</h3>
       </div>
-      
-      <p class="text-xs text-gray-500 mb-4 leading-relaxed">Please enter your Room Number or Name so we can serve you.</p>
-      
-      <input type="text" id="room-input" placeholder="e.g. Room 102 or Alex" class="w-full border border-gray-200 focus:border-emerald-600 rounded-xl p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/10 mb-5 transition duration-200">
-      
+      <input type="text" id="room-input" class="w-full border-2 border-gray-100 focus:border-coconut-yellow rounded-xl p-4 text-sm focus:outline-none focus:ring-4 focus:ring-yellow-50 mb-6 transition" placeholder="Room number / Your name">
       <div class="flex gap-3">
-        <button onclick="closeRoomModal()" class="w-1/2 py-3 border border-gray-200 hover:bg-gray-50 rounded-xl text-sm font-semibold text-gray-500 transition duration-200 active:scale-95">Cancel</button>
-        <button id="submit-order-btn" onclick="submitOrder()" class="w-1/2 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-700/10 transition duration-200 active:scale-95">Submit</button>
+        <button onclick="closeRoomModal()" class="w-1/3 py-3 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 transition" id="ui-modal-cancel">Cancel</button>
+        <button id="submit-order-btn" onclick="submitOrder()" class="w-2/3 py-3 bg-coconut-green text-white rounded-xl text-sm font-bold shadow-lg shadow-green-900/20 active:scale-95 transition">Send Order</button>
       </div>
     </div>
   </div>
 
   <!-- SCRIPT XỬ LÝ LOGIC -->
   <script>
-    // Khởi tạo cấu hình từ biến global CONFIG
-    const CONFIG = window.CONFIG;
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyoO29TJ6-0FYAvS-WCkTAWaZAc3HE329V9dhvDp-fxLkYetg4CCoEmaXaIB8zRtrlE/exec";
-    const TELEGRAM_BOT_TOKEN = CONFIG.TELEGRAM_BOT_TOKEN;
-    const TELEGRAM_CHAT_ID = CONFIG.TELEGRAM_CHAT_ID;
-/*
-    // Hiển thị cảnh báo nếu thiếu cấu hình
-    if (!SHEETS_API_URL || !TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || 
-        SHEETS_API_URL.includes("YOUR_") || TELEGRAM_BOT_TOKEN.includes("YOUR_")) {
-      document.getElementById('config-warning').classList.remove('hidden');
-    }
-*/
+    
     let menuData = [];
     let cart = {};
     let currentCategory = 'All';
+    let currentLang = 'en';
+    let viewMode = 'magazine';
 
-    // Định dạng giá tiền VNĐ an toàn
+    const i18n = {
+      en: {
+        subtitle: "Local Food & Chill Vibes",
+        loading: "Discovering local tastes...",
+        all: "All",
+        totalText: "Total Amount",
+        viewCart: "View Cart",
+        modalTitle: "Ready to order?",
+        placeholder: "Room number / Your name",
+        cancel: "Cancel",
+        send: "Send Order",
+        noItems: "No items in this category.",
+        alertRoom: "Please enter your Room Number or Name!",
+        alertSuccess: "Thank you! Your order has been sent to the host.",
+        alertError: "Error sending order. Please contact host directly.",
+        ingredients: "Made with:",
+        allergens: "Allergens:",
+        viewMagazine: "Magazine View",
+        viewList: "List View"
+      },
+      vi: {
+        subtitle: "Đặc sản địa phương & Nghỉ dưỡng",
+        loading: "Đang tải thực đơn...",
+        all: "Tất cả",
+        totalText: "Tổng cộng",
+        viewCart: "Xem giỏ hàng",
+        modalTitle: "Bạn muốn đặt món?",
+        placeholder: "Số phòng / Tên của bạn",
+        cancel: "Hủy",
+        send: "Gửi Đơn",
+        noItems: "Chưa có món nào.",
+        alertRoom: "Vui lòng nhập Số phòng hoặc Tên của bạn!",
+        alertSuccess: "Cảm ơn bạn! Đơn hàng đã được gửi tới chủ nhà.",
+        alertError: "Có lỗi khi gửi đơn. Vui lòng liên hệ trực tiếp chủ nhà.",
+        ingredients: "Thành phần chính:",
+        allergens: "Lưu ý dị ứng:",
+        viewMagazine: "Dạng Tạp chí",
+        viewList: "Dạng Danh sách"
+      }
+    };
+
+    function updateUIText() {
+      const t = i18n[currentLang];
+      document.getElementById('ui-subtitle').innerText = t.subtitle;
+      document.getElementById('ui-total-text').innerText = t.totalText;
+      document.getElementById('ui-confirm-btn').innerText = t.viewCart;
+      document.getElementById('ui-modal-title').innerText = t.modalTitle;
+      document.getElementById('room-input').placeholder = t.placeholder;
+      document.getElementById('ui-modal-cancel').innerText = t.cancel;
+      document.getElementById('submit-order-btn').innerText = t.send;
+      
+      const viewText = viewMode === 'magazine' ? t.viewList : t.viewMagazine;
+      document.getElementById('ui-view-mode').innerText = viewText;
+      
+      const allBtn = document.querySelector('.cat-btn');
+      if(allBtn && currentCategory === 'All') allBtn.innerText = t.all;
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'en' ? 'vi' : 'en';
+      document.getElementById('lang-text').innerText = currentLang.toUpperCase();
+      updateUIText();
+      renderCategories();
+      renderMenu(currentCategory);
+    }
+
+    function toggleViewMode() {
+      viewMode = viewMode === 'magazine' ? 'list' : 'magazine';
+      const icon = document.getElementById('view-icon');
+      if (viewMode === 'magazine') {
+        icon.className = 'fa-solid fa-list'; 
+      } else {
+        icon.className = 'fa-solid fa-image'; 
+      }
+      updateUIText();
+      renderMenu(currentCategory);
+    }
+
+    // Hàm ẩn/hiện văn bản Story
+    function toggleStory(textId, iconId) {
+      const textEl = document.getElementById(textId);
+      const iconEl = document.getElementById(iconId);
+      if (textEl && iconEl) {
+        textEl.classList.toggle('line-clamp-2');
+        iconEl.classList.toggle('rotate-180');
+      }
+    }
+
     function formatPrice(price) {
       const num = Number(price);
-      if (isNaN(num)) return 'Contact Host';
-      return num.toLocaleString('vi-VN') + ' VNĐ';
+      return isNaN(num) ? '' : num.toLocaleString('vi-VN') + ' đ';
     }
 
-    // 1. Tải dữ liệu từ Google Sheets
     async function fetchMenu() {
-      const loadingDiv = document.getElementById('loading');
-      if (!SHEETS_API_URL || SHEETS_API_URL.includes("YOUR_")) {
-        loadingDiv.innerHTML = `
-          <div class="text-amber-600 p-6 border border-amber-200 rounded-2xl bg-amber-50 text-center max-w-sm mx-auto">
-            <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 animate-bounce"></i>
-            <p class="font-bold">Google Sheets URL not configured</p>
-            <p class="text-xs mt-2 text-amber-700">Please fill SHEETS_API_URL in <code>config.js</code> to load the menu.</p>
-          </div>
-        `;
-        return;
-      }
-
       try {
         const response = await fetch(SHEETS_API_URL);
-        if (!response.ok) {
-          throw new Error("Failed to connect to Google Sheets server");
-        }
         menuData = await response.json();
-        
-        if (!Array.isArray(menuData)) {
-          throw new Error("Invalid data format received");
-        }
-
-        // Tự động tạo ID nếu Google Sheet không có cột id
         menuData.forEach((item, index) => {
-          if (item.id === undefined || item.id === null || String(item.id).trim() === '') {
-            item.id = 'item_' + index;
-          }
+          if (!item.id || String(item.id).trim() === '') item.id = 'item_' + index;
         });
-
         renderCategories();
         renderMenu('All');
+        updateUIText();
       } catch (error) {
-        console.error("Lỗi tải menu:", error);
-        loadingDiv.innerHTML = `
-          <div class="text-red-500 p-6 border border-red-200 rounded-2xl bg-red-50 text-center max-w-sm mx-auto">
-            <i class="fa-solid fa-circle-xmark text-3xl mb-2"></i>
-            <p class="font-semibold">Failed to load menu</p>
-            <p class="text-xs text-gray-500 mt-2">${error.message || "Please check config or network connection."}</p>
-            <button onclick="fetchMenu()" class="mt-4 px-5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:bg-emerald-800 transition active:scale-95">
-              Try again
-            </button>
-          </div>
-        `;
+        document.getElementById('menu-container').innerHTML = `<p class="text-center text-red-500 py-10">Cannot load menu.</p>`;
       }
     }
 
-    // 2. Render Nút Danh Mục
     function renderCategories() {
       const categories = ['All', ...new Set(menuData.map(item => item.category).filter(Boolean))];
       const container = document.getElementById('category-list');
-      container.innerHTML = categories.map(cat => `
-        <button 
-          onclick="filterCategory('${cat}')" 
-          data-category="${cat}"
-          class="cat-btn ${cat === currentCategory ? 'bg-emerald-700 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200">
-          ${cat}
-        </button>
-      `).join('');
-    }
-
-    // 3. Lọc danh mục
-    function filterCategory(category) {
-      currentCategory = category;
-      document.querySelectorAll('.cat-btn').forEach(btn => {
-        const btnCat = btn.getAttribute('data-category');
-        if(btnCat === category) {
-          btn.className = "cat-btn bg-emerald-700 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200 shadow-sm";
-        } else {
-          btn.className = "cat-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition active:scale-95 duration-200";
-        }
-      });
-      renderMenu(category);
-    }
-
-    // 4. Render Danh Sách Món Ăn
-    function renderMenu(category) {
-      const container = document.getElementById('menu-container');
-      const filtered = category === 'All' ? menuData : menuData.filter(i => i.category === category);
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 text-gray-400">
-            <i class="fa-solid fa-utensils text-3xl mb-2"></i>
-            <p class="text-sm font-medium">No items found in this category.</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = filtered.map(item => {
-        const qty = cart[item.id] || 0;
-        // Sử dụng ảnh mặc định chill nếu món ăn không có hình ảnh
-        const itemImage = item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop&q=60';
-        
-        return `
-          <div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md border border-gray-100/80 flex flex-col gap-3 transition-all duration-200">
-            <div class="flex gap-3">
-              <img src="${itemImage}" 
-                   onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop&q=60'"
-                   class="w-20 h-20 rounded-xl object-cover bg-gray-50 flex-shrink-0 shadow-sm border border-gray-100">
-              <div class="flex-1">
-                <h3 class="font-bold text-gray-800 text-base font-outfit">${item.name}</h3>
-                <p class="text-emerald-700 font-bold text-sm mt-1">${formatPrice(item.price)}</p>
-                
-                <!-- NÚT DROPDOWN XỔ CHI TIẾT -->
-                <button onclick="toggleDropdown('${item.id}')" class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold mt-2.5 flex items-center gap-1 focus:outline-none transition">
-                  <span>Ingredients & Allergens</span>
-                  <i id="icon-${item.id}" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
-                </button>
-              </div>
-
-              <!-- Nút tăng giảm số lượng -->
-              <div class="flex flex-col justify-end items-end gap-1">
-                <div class="flex items-center gap-2 bg-gray-50 rounded-xl p-1 border border-gray-100">
-                  <button onclick="updateQty('${item.id}', -1)" class="w-7 h-7 bg-white hover:bg-gray-100 text-gray-600 font-bold shadow-sm rounded-lg flex items-center justify-center transition active:scale-90">-</button>
-                  <span id="qty-${item.id}" class="text-sm font-extrabold px-1 min-w-[16px] text-center text-gray-700">${qty}</span>
-                  <button onclick="updateQty('${item.id}', 1)" class="w-7 h-7 bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-sm rounded-lg flex items-center justify-center transition active:scale-90">+</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- NỘI DUNG DROPDOWN (XỔ XUỐNG) -->
-            <div id="dropdown-${item.id}" class="hidden text-xs bg-emerald-50/30 p-3 rounded-xl border border-emerald-100/50 text-gray-600 space-y-1 transition-all duration-300">
-              <p><strong>Ingredients:</strong> ${item.ingredients || 'Fresh local ingredients'}</p>
-              ${item.allergens ? `<p class="text-amber-700"><strong>Allergens:</strong> ${item.allergens}</p>` : ''}
-            </div>
-          </div>
-        `;
+      const t = i18n[currentLang];
+      
+      container.innerHTML = categories.map(cat => {
+        const displayName = cat === 'All' ? t.all : cat;
+        const activeClass = cat === currentCategory 
+          ? 'bg-coconut-green text-white shadow-md' 
+          : 'bg-white/60 text-gray-600 hover:bg-white border border-amber-200/50';
+        return `<button onclick="filterCategory('${cat}')" data-category="${cat}" class="cat-btn ${activeClass} px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300">${displayName}</button>`;
       }).join('');
     }
 
-    // 5. Toggle Dropdown
-    function toggleDropdown(id) {
-      const content = document.getElementById(`dropdown-${id}`);
-      const icon = document.getElementById(`icon-${id}`);
-      if (content && icon) {
-        content.classList.toggle('hidden');
-        icon.classList.toggle('rotate-180');
-      }
+    function filterCategory(category) {
+      currentCategory = category;
+      renderCategories();
+      renderMenu(category);
+      
+      // UX Update: Tự động cuộn mượt mà đưa nút vừa bấm ra chính giữa màn hình
+      setTimeout(() => {
+        const activeBtn = document.querySelector(`.cat-btn[data-category="${category}"]`);
+        if (activeBtn) {
+          activeBtn.scrollIntoView({ 
+            behavior: 'smooth', // Cuộn trượt mượt mà (không bị giật)
+            inline: 'center',   // Canh giữa theo chiều ngang
+            block: 'nearest'    // Giữ nguyên vị trí chiều dọc
+          });
+        }
+      }, 50); // Delay 50ms để đợi giao diện render xong nút mới
     }
 
-    // 6. Cập nhật giỏ hàng (Tối ưu hóa: chỉ cập nhật phần tử số lượng và tổng tiền trong DOM)
-    function updateQty(id, change) {
-      const item = menuData.find(i => String(i.id) === String(id));
-      if (!item) return;
+    function renderMenu(category) {
+      const container = document.getElementById('menu-container');
+      const filtered = category === 'All' ? menuData : menuData.filter(i => i.category === category);
+      const t = i18n[currentLang];
 
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-400 py-12">${t.noItems}</p>`;
+        return;
+      }
+
+      container.className = viewMode === 'magazine' 
+        ? 'p-4 max-w-md mx-auto mt-2 space-y-8' 
+        : 'p-4 max-w-md mx-auto mt-2 space-y-4';
+
+      container.innerHTML = filtered.map(item => {
+        const qty = cart[item.id] || 0;
+        const itemImage = item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80';
+        
+        const name = item[`name_${currentLang}`] || item.name_en || item.name;
+        const story = item[`story_${currentLang}`] || item.story_en || item.story;
+        const ingredients = item[`ingredients_${currentLang}`] || item.ingredients_en || item.ingredients;
+        const allergens = item[`allergens_${currentLang}`] || item.allergens_en || item.allergens;
+
+        const cartButtons = qty === 0 
+          ? `<button onclick="updateQty('${item.id}', 1)" class="w-9 h-9 bg-gray-50 hover:bg-coconut-yellow text-gray-400 hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm">
+               <i class="fa-solid fa-plus"></i>
+             </button>`
+          : `<div class="flex items-center bg-coconut-lightgreen rounded-full p-1 border border-green-200 shadow-inner">
+               <button onclick="updateQty('${item.id}', -1)" class="w-7 h-7 bg-white text-coconut-green rounded-full font-bold shadow-sm active:scale-90 transition">-</button>
+               <span class="w-6 text-center font-bold text-coconut-green text-sm">${qty}</span>
+               <button onclick="updateQty('${item.id}', 1)" class="w-7 h-7 bg-coconut-green text-white rounded-full font-bold shadow-sm active:scale-90 transition">+</button>
+             </div>`;
+
+        // GIAO DIỆN TẠP CHÍ (MAGAZINE)
+        if (viewMode === 'magazine') {
+          return `
+            <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden relative group">
+              <div class="relative h-56 w-full">
+                <img src="${itemImage}" class="w-full h-full object-cover" loading="lazy">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                <div class="absolute bottom-4 left-5 right-5 flex justify-between items-end">
+                  <h3 class="text-2xl font-bold text-white font-serif leading-tight text-shadow drop-shadow-md">${name}</h3>
+                  <span class="bg-coconut-yellow text-coconut-green text-sm px-3 py-1.5 rounded-lg font-bold shadow-md whitespace-nowrap">${formatPrice(item.price)}</span>
+                </div>
+              </div>
+              <div class="p-5 pb-6">
+                <!-- XỬ LÝ CẮT GỌN STORY DẠNG TẠP CHÍ -->
+                ${story ? `
+                  <div class="mb-4">
+                    <p id="story-mag-${item.id}" class="text-sm text-gray-600 italic leading-relaxed font-serif line-clamp-2 transition-all duration-300">"${story}"</p>
+                    <button onclick="toggleStory('story-mag-${item.id}', 'icon-mag-${item.id}')" class="text-[10px] text-amber-500 hover:text-amber-700 font-bold mt-1.5 flex items-center gap-1 focus:outline-none transition-colors">
+                      <i id="icon-mag-${item.id}" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                    </button>
+                  </div>
+                ` : ''}
+                
+                <div class="flex justify-between items-end gap-3">
+                  <div class="flex-1">
+                    ${ingredients ? `
+                      <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">${t.ingredients}</p>
+                      <div class="flex flex-wrap gap-1.5 mb-2">
+                        ${ingredients.split(',').map(ing => `<span class="text-[10px] bg-coconut-lightgreen text-coconut-green px-2 py-1 rounded-md font-medium border border-green-100">${ing.trim()}</span>`).join('')}
+                      </div>
+                    ` : ''}
+                    ${allergens ? `
+                      <p class="text-[10px] text-amber-500 uppercase font-bold mt-2 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> ${t.allergens}</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        ${allergens.split(',').map(al => `<span class="text-[10px] bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium border border-amber-100">${al.trim()}</span>`).join('')}
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div class="flex items-center shrink-0 pl-2">
+                    ${cartButtons}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } 
+        
+        // GIAO DIỆN DANH SÁCH (LIST)
+        else {
+          return `
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex overflow-hidden p-3 gap-4 items-stretch">
+              <div class="w-28 shrink-0 relative rounded-xl overflow-hidden shadow-sm">
+                <img src="${itemImage}" class="w-full h-full object-cover absolute inset-0" loading="lazy">
+              </div>
+              <div class="flex-1 flex flex-col justify-between py-1">
+                <div>
+                  <h3 class="font-bold text-gray-800 text-base font-serif leading-snug mb-1">${name}</h3>
+                  
+                  <!-- XỬ LÝ CẮT GỌN STORY DẠNG DANH SÁCH -->
+                  ${story ? `
+                    <div class="mb-1">
+                      <p id="story-list-${item.id}" class="text-xs text-gray-500 italic line-clamp-2 font-serif transition-all duration-300">"${story}"</p>
+                      <button onclick="toggleStory('story-list-${item.id}', 'icon-list-${item.id}')" class="text-[10px] text-amber-500 hover:text-amber-700 font-bold mt-1 focus:outline-none transition-colors">
+                        <i id="icon-list-${item.id}" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                      </button>
+                    </div>
+                  ` : ''}
+                  
+                  ${allergens ? `<p class="text-[10px] text-amber-600 mt-1 font-medium"><i class="fa-solid fa-triangle-exclamation"></i> ${allergens}</p>` : ''}
+                </div>
+                <div class="flex justify-between items-end mt-3">
+                  <span class="font-bold text-sm text-coconut-green">${formatPrice(item.price)}</span>
+                  ${cartButtons}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    function updateQty(id, change) {
       cart[id] = (cart[id] || 0) + change;
-      if (cart[id] <= 0) {
-        delete cart[id];
-      }
-      
-      // Cập nhật text hiển thị số lượng trực tiếp trong DOM
-      const qtySpan = document.getElementById(`qty-${id}`);
-      if (qtySpan) {
-        qtySpan.innerText = cart[id] || 0;
-      }
-      
+      if (cart[id] <= 0) delete cart[id];
+      renderMenu(currentCategory);
       calculateTotal();
     }
 
-    // 7. Tính tổng tiền
     function calculateTotal() {
-      let total = 0;
+      let total = 0, totalItems = 0;
       for (let id in cart) {
         let item = menuData.find(i => String(i.id) === String(id));
         if (item) {
           total += Number(item.price) * cart[id];
+          totalItems += cart[id];
         }
       }
       document.getElementById('total-price').innerText = formatPrice(total);
+      
+      const cartBar = document.getElementById('cart-bar');
+      if (totalItems > 0) cartBar.classList.remove('translate-y-[150%]');
+      else cartBar.classList.add('translate-y-[150%]');
     }
 
-    // 8. Bật/Tắt Modal
     function openRoomModal() {
-      if (Object.keys(cart).length === 0) {
-        alert("Please select at least 1 item!");
-        return;
-      }
-      const modal = document.getElementById('room-modal');
-      modal.classList.remove('hidden');
+      document.getElementById('room-modal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
-      document.getElementById('room-input').focus();
     }
     
     function closeRoomModal() {
-      const modal = document.getElementById('room-modal');
-      modal.classList.add('hidden');
+      document.getElementById('room-modal').classList.add('hidden');
       document.body.style.overflow = '';
     }
 
-    // 9. GỬI ĐƠN HÀNG SANG TELEGRAM BOT (GỌI QUA PROXY ĐỂ BẢO MẬT)
     async function submitOrder() {
       const room = document.getElementById('room-input').value.trim();
-      if (!room) {
-        alert("Please enter your Room Number or Name!");
-        return;
-      }
+      const t = i18n[currentLang];
+      if (!room) { alert(t.alertRoom); return; }
 
       const submitBtn = document.getElementById('submit-order-btn');
-      const originalBtnText = submitBtn.innerHTML;
+      const originalText = submitBtn.innerHTML;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...`;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>...`;
 
-      // Định dạng tin nhắn HTML
-      let orderText = `🚨 <b>NEW ORDER RECEIVED!</b>\n`;
-      orderText += `📍 <b>Location/Room:</b> ${room}\n`;
-      orderText += `------------------------------\n`;
-
+      let orderText = `🚨 <b>NEW ORDER RECEIVED!</b>\n📍 <b>Location/Room:</b> ${room}\n------------------------------\n`;
       let total = 0;
       for (let id in cart) {
         let item = menuData.find(i => String(i.id) === String(id));
         if (item) {
           let subtotal = Number(item.price) * cart[id];
           total += subtotal;
-          orderText += `• <b>${item.name}</b> x${cart[id]} = ${subtotal.toLocaleString('vi-VN')}đ\n`;
+          let itemName = item.name_en || item.name || item.name_vi; 
+          orderText += `• <b>${itemName}</b> x${cart[id]} = ${subtotal.toLocaleString('vi-VN')}đ\n`;
         }
       }
-
-      orderText += `------------------------------\n`;
-      orderText += `💰 <b>TOTAL:</b> ${total.toLocaleString('vi-VN')} VNĐ\n`;
-      orderText += `⏰ <b>Time:</b> ${new Date().toLocaleTimeString('vi-VN')} ${new Date().toLocaleDateString('vi-VN')}`;
+      orderText += `------------------------------\n💰 <b>TOTAL:</b> ${total.toLocaleString('vi-VN')} đ\n⏰ <b>Time:</b> ${new Date().toLocaleTimeString('vi-VN')}`;
 
       try {
-        // Gọi tới API trung gian bảo mật của Vercel
         const response = await fetch('/api/send-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: orderText })
         });
-
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || "Failed to send order");
-        }
-
-        alert("Thank you! Your order has been sent to the host.");
-        
-        // Reset cart
-        cart = {};
-        calculateTotal();
-        closeRoomModal();
-
-        document.querySelectorAll('[id^="qty-"]').forEach(span => {
-          span.innerText = '0';
-        });
-
-        filterCategory('All');
+        if (!response.ok) throw new Error("API Error");
+        alert(t.alertSuccess);
+        cart = {}; calculateTotal(); closeRoomModal(); renderMenu(currentCategory);
       } catch (e) {
-        console.error("Gửi đơn hàng thất bại:", e);
-        alert("Error sending order: " + e.message);
+        alert(t.alertError);
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false; submitBtn.innerHTML = originalText;
       }
     }
 
-    // Chạy tải dữ liệu khi trang web load
     fetchMenu();
   </script>
 </body>
