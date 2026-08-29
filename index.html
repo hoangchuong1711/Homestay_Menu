@@ -282,9 +282,24 @@
       }, 50); // Delay 50ms để đợi giao diện render xong nút mới
     }
 
+    function isAvailable(item) {
+      const value = String(item.available ?? '').trim().toLowerCase();
+
+      // Các giá trị được xem là còn hàng
+      return !['false', 'no', '0', 'sold out', 'unavailable', 'hết món', 'hết hàng'].includes(value);
+    }
+
     function renderMenu(category) {
       const container = document.getElementById('menu-container');
-      const filtered = category === 'All' ? menuData : menuData.filter(i => i.category === category);
+      let filtered = category === 'All'
+        ? [...menuData]
+        : menuData.filter(i => i.category === category);
+
+      // Món còn hàng lên trước, món hết hàng xuống cuối
+      filtered.sort((a, b) => {
+        return Number(isAvailable(b)) - Number(isAvailable(a));
+      });
+
       const t = i18n[currentLang];
 
       if (filtered.length === 0) {
@@ -305,23 +320,60 @@
         const ingredients = item[`ingredients_${currentLang}`] || item.ingredients_en || item.ingredients;
         const allergens = item[`allergens_${currentLang}`] || item.allergens_en || item.allergens;
 
-        const cartButtons = qty === 0 
-          ? `<button onclick="updateQty('${item.id}', 1)" class="w-9 h-9 bg-gray-50 hover:bg-coconut-yellow text-gray-400 hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm">
-               <i class="fa-solid fa-plus"></i>
-             </button>`
-          : `<div class="flex items-center bg-coconut-lightgreen rounded-full p-1 border border-green-200 shadow-inner">
-               <button onclick="updateQty('${item.id}', -1)" class="w-7 h-7 bg-white text-coconut-green rounded-full font-bold shadow-sm active:scale-90 transition">-</button>
-               <span class="w-6 text-center font-bold text-coconut-green text-sm">${qty}</span>
-               <button onclick="updateQty('${item.id}', 1)" class="w-7 h-7 bg-coconut-green text-white rounded-full font-bold shadow-sm active:scale-90 transition">+</button>
-             </div>`;
+        const available = isAvailable(item);
+
+        const cartButtons = !available
+          ? `
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-3 py-2 rounded-full whitespace-nowrap">
+              <i class="fa-solid fa-circle-xmark mr-1"></i>
+              ${currentLang === 'vi' ? 'Hết món' : 'Sold Out'}
+            </div>
+          `
+          : qty === 0 
+            ? `
+              <button onclick="updateQty('${item.id}', 1)" 
+                class="w-9 h-9 bg-gray-50 hover:bg-coconut-yellow text-gray-400 hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            `
+            : `
+              <div class="flex items-center bg-coconut-lightgreen rounded-full p-1 border border-green-200 shadow-inner">
+                <button onclick="updateQty('${item.id}', -1)" 
+                  class="w-7 h-7 bg-white text-coconut-green rounded-full font-bold shadow-sm active:scale-90 transition">
+                  -
+                </button>
+
+                <span class="w-6 text-center font-bold text-coconut-green text-sm">
+                  ${qty}
+                </span>
+
+                <button onclick="updateQty('${item.id}', 1)" 
+                  class="w-7 h-7 bg-coconut-green text-white rounded-full font-bold shadow-sm active:scale-90 transition">
+                  +
+                </button>
+              </div>
+            `;
 
         // GIAO DIỆN TẠP CHÍ (MAGAZINE)
         if (viewMode === 'magazine') {
           return `
-            <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden relative group">
+            <div class="${available ? 'bg-white' : 'bg-gray-100 opacity-50 grayscale'} rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden relative group">
               <div class="relative h-56 w-full">
-                <img src="${itemImage}" class="w-full h-full object-cover" loading="lazy">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+              <img 
+                src="${itemImage}" 
+                class="w-full h-full object-cover ${available ? '' : 'grayscale'}" 
+                loading="lazy"
+              >
+
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+
+            ${!available ? `
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="bg-black/70 text-white px-5 py-2 rounded-full text-sm font-bold tracking-widest uppercase">
+                  ${currentLang === 'vi' ? 'Hết món' : 'Sold Out'}
+                </span>
+              </div>
+            ` : ''}
                 <div class="absolute bottom-4 left-5 right-5 flex justify-between items-end">
                   <h3 class="text-2xl font-bold text-white font-serif leading-tight text-shadow drop-shadow-md">${name}</h3>
                   <span class="bg-coconut-yellow text-coconut-green text-sm px-3 py-1.5 rounded-lg font-bold shadow-md whitespace-nowrap">${formatPrice(item.price)}</span>
@@ -365,10 +417,19 @@
         // GIAO DIỆN DANH SÁCH (LIST)
         else {
           return `
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex overflow-hidden p-3 gap-4 items-stretch">
+            <div class="${available ? 'bg-white' : 'bg-gray-100 opacity-50 grayscale'} rounded-2xl shadow-sm border border-gray-100 flex overflow-hidden p-3 gap-4 items-stretch">
               <div class="w-28 shrink-0 relative rounded-xl overflow-hidden shadow-sm">
-                <img src="${itemImage}" class="w-full h-full object-cover absolute inset-0" loading="lazy">
+                <img 
+                  src="${itemImage}" 
+                  class="w-full h-full object-cover absolute inset-0 ${available ? '' : 'grayscale'}" 
+                  loading="lazy"
+                >
               </div>
+              ${!available ? `
+                <span class="absolute top-2 left-2 bg-black/70 text-white text-[9px] px-2 py-1 rounded-full font-bold uppercase">
+                  ${currentLang === 'vi' ? 'Hết món' : 'Sold Out'}
+                </span>
+              ` : ''}
               <div class="flex-1 flex flex-col justify-between py-1">
                 <div>
                   <h3 class="font-bold text-gray-800 text-base font-serif leading-snug mb-1">${name}</h3>
@@ -397,8 +458,19 @@
     }
 
     function updateQty(id, change) {
+      const item = menuData.find(i => String(i.id) === String(id));
+
+      // Không cho thêm món đã hết hàng
+      if (item && !isAvailable(item) && change > 0) {
+        return;
+      }
+
       cart[id] = (cart[id] || 0) + change;
-      if (cart[id] <= 0) delete cart[id];
+
+      if (cart[id] <= 0) {
+        delete cart[id];
+      }
+
       renderMenu(currentCategory);
       calculateTotal();
     }
